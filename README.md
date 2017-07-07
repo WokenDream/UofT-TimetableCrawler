@@ -1,1 +1,1 @@
-# UofT-TimTableCrawler
+# UofT-TimeTableCrawler
