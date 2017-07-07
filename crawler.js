@@ -8,11 +8,10 @@ function gatherCourseInfo($) {
     ];
 
     for (let disipline of disiplines) {
-        $('a[name=' + disipline + ']').each( function() {
-            $('tr', this).slice(1).each( function() {
-                $('td', this).each(function() {
-                    console.log($(this).text())
-                });
+        let timetables = $('a[name=' + disipline + ']').first();
+        $('tr', timetables).slice(1).each( function() {
+            $('td', this).each( function() {
+                console.log($(this).text());
             });
         });
 
