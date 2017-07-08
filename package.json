@@ -13,8 +13,5 @@
     "request": "^2.81.0",
     "url-parse": "^1.1.9"
   },
-  "devDependencies": {
-    "eslint": "^4.1.1",
-    "eslint-config-google": "^0.8.0"
-  }
+  "devDependencies": {}
 }
