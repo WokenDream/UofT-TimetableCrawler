@@ -2,20 +2,26 @@ var request = require('request');
 var cheerio = require('cheerio');
 var URL = require('url-parse');
 
-function gatherCourseInfo($) {
-    let disiplines = ['AER', 'APM', 'APS', 'BME', 'CHE', 'CIV', 'CME', 'CSC',
-        'ECE', 'ESC', 'FOR', 'JRE', 'MAT', 'MIE', 'MIN', 'MSE', 'PHY', 'ROB'
-    ];
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/27017');
+var connection = mongoose.connection;
+connection.on('error', console.error.bind(console, 'connection error:'));
+connection.on('connected', () => console.log('database connected'));
 
-    for (let disipline of disiplines) {
-        let timetables = $('a[name=' + disipline + ']').first();
-        $('tr', timetables).slice(1).each( function() {
-            $('td', this).each( function() {
-                console.log($(this).text());
-            });
-        });
+var course = require('./models/course');
+var course = require('./models/lecture');
+var course = require('./models/section');
+var course = require('./models/session');
 
-    }
+crawl();
+
+function crawl() {
+    crawlEngineeringPages();
+    crwalArtsSciPages();
+}
+
+function crwalArtsSciPages() {
+    console.log('stay tunned for ArtSci');
 }
 
 function crawlEngineeringPages() {
@@ -39,18 +45,60 @@ function crawlEngineeringPages() {
             }
             let $ = cheerio.load(body);
             console.log('crawling ' + page);
-            gatherCourseInfo($);
+            gatherEngineeringCourseInfo($);
         });
     }
 }
 
-function crwalArtsSciPages() {
-    console.log('stay tunned for ArtSci');
+function gatherEngineeringCourseInfo($) {
+    let disiplines = ['AER', 'APM', 'APS', 'BME', 'CHE', 'CIV', 'CME', 'CSC',
+        'ECE', 'ESC', 'FOR', 'JRE', 'MAT', 'MIE', 'MIN', 'MSE', 'PHY', 'ROB'
+    ];
+
+    for (let disipline of disiplines) {
+        let timetables = $('a[name=' + disipline + ']');
+        let prevCrsCode = '';
+        $('tr', timetables).slice(1).each(function () {
+            let section = $('td', this);
+            prevCrsCode = dbInsert(section, prevCrsCode);
+        });
+
+    }
 }
 
-function crawl() {
-    crawlEngineeringPages();
-    crwalArtsSciPages();
-}
+function dbInsert(section, prevCrsCode) {
+    let crsCode = section.eq(0).text();
+    let secCode = section.eq(1).text();
+    let dayOfWeek = section.eq(3).text();
+    let start = section.eq(4).text();
+    let finish = section.eq(5).text();
+    let location = section.eq(6).text().trim();
+    let instructor = section.eq(7).text().trim();
 
-crawl();
+    if (prevCrsCode === crsCode) {
+        console.log(secCode);
+        console.log(dayOfWeek);
+        console.log(start);
+        console.log(finish);
+        if (location !== '') {
+            console.log(location);
+        }
+        if (instructor !== '') {
+            console.log(instructor);
+        }
+    } else {
+        console.log();
+        console.log(crsCode);
+        console.log(secCode);
+        console.log(dayOfWeek);
+        console.log(start);
+        console.log(finish);
+        if (location !== '') {
+            console.log(location);
+        }
+        if (instructor !== '') {
+            console.log(instructor);
+        }
+    }
+    return crsCode;
+}
