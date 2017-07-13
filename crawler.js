@@ -9,22 +9,44 @@ connection.on('error', console.error.bind(console, 'connection error:'));
 connection.on('connected', () => console.log('database connected'));
 
 var course = require('./models/course');
-var course = require('./models/lecture');
-var course = require('./models/section');
-var course = require('./models/session');
+var lecSection = require('./models/lecture');
+var section = require('./models/section').SectionSchema;
+var session = require('./models/session');
+
+var courseInfo = new Map();
 
 crawl();
 
 function crawl() {
-    crawlEngineeringPages();
-    crwalArtsSciPages();
+    crawlEngineeringCourseDescription();
+    // crawlEngineeringTimetables();
+    // crawlArtsSciTimetables();
 }
 
-function crwalArtsSciPages() {
+function crawlEngineeringCourseDescription() {
+    let page = "https://portal.engineering.utoronto.ca/sites/calendars/current/Course_Descriptions.html";
+    request(page, function (error, res, body) {
+        if (error) {
+            console.log('crawling engineering course decription failed');
+            console.log(error);
+        }
+        console.log("status code: " + res.statusCode);
+
+        if (res.statusCode !== 200) {
+            return;
+        }
+
+        let $ = cheerio.load(body);
+        console.log('crawling ' + page);
+        gatherEngineeringCourseDescription($);
+    });
+}
+
+function crawlArtsSciTimetables() {
     console.log('stay tunned for ArtSci');
 }
 
-function crawlEngineeringPages() {
+function crawlEngineeringTimetables() {
 
     let pages = [
         "https://portal.engineering.utoronto.ca/sites/timetable/winter.html",
@@ -45,12 +67,12 @@ function crawlEngineeringPages() {
             }
             let $ = cheerio.load(body);
             console.log('crawling ' + page);
-            gatherEngineeringCourseInfo($);
+            gatherEngineeringCourseTime($);
         });
     }
 }
 
-function gatherEngineeringCourseInfo($) {
+function gatherEngineeringCourseTime($) {
     let disiplines = ['AER', 'APM', 'APS', 'BME', 'CHE', 'CIV', 'CME', 'CSC',
         'ECE', 'ESC', 'FOR', 'JRE', 'MAT', 'MIE', 'MIN', 'MSE', 'PHY', 'ROB'
     ];
@@ -66,8 +88,25 @@ function gatherEngineeringCourseInfo($) {
     }
 }
 
+function gatherEngineeringCourseDescription($) {
+    // let courses = $('a[name]a:not([name^=Course])');
+    let courses = $("a[name$=H1],a[name$=Y1]");
+    let i = 0;
+    courses.each(function() {
+        let crsCode = $(this).attr('name');
+        let crsName = $(this).next().find('span').eq(1).text();
+        courseInfo.set(crsCode, crsName);
+    });
+
+    for (let [key, val] of courseInfo) {
+        console.log();
+        console.log(key);
+        console.log(val);
+    }
+}
+
 function dbInsert(section, prevCrsCode) {
-    let crsCode = section.eq(0).text();
+    let crsCode = section.eq(0).text().slice(0, -1);
     let secCode = section.eq(1).text();
     let dayOfWeek = section.eq(3).text();
     let start = section.eq(4).text();
