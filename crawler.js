@@ -15,11 +15,36 @@ var session = require('./models/session');
 
 var courseInfo = new Map();
 
+function CourseOffering(crsName) {
+    this.crsName = crsName;
+    this.lectures = [];
+    this.tutorials = [];
+    this.practicals = [];
+}
+
+function Section(secCode) {
+    this.secCode = secCode;
+    this.sessions = []
+}
+
+function LecSection(secCode, instructor) {
+    Section.call(this, secCode);
+    this.instructor = instructor;
+    //just for storing data, no need to inherit prototype chain
+}
+
+function Sesssion(dayOfWeek, startTime, endTime, location) {
+    this.dayOfWeek = dayOfWeek;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.location = location;
+}
+
 crawl();
 
 function crawl() {
     crawlEngineeringCourseDescription();
-    // crawlEngineeringTimetables();
+    crawlEngineeringTimetables();
     // crawlArtsSciTimetables();
 }
 
@@ -40,6 +65,24 @@ function crawlEngineeringCourseDescription() {
         console.log('crawling ' + page);
         gatherEngineeringCourseDescription($);
     });
+}
+
+function gatherEngineeringCourseDescription($) {
+    // let courses = $('a[name]a:not([name^=Course])');
+    let courses = $("a[name$=H1],a[name$=Y1]");
+    let i = 0;
+    courses.each(function () {
+        let crsCode = $(this).attr('name');
+        let crsName = $(this).next().find('span').eq(1).text();
+        let offering = new CourseOffering(crsName);
+        courseInfo.set(crsCode, offering);
+    });
+
+    for (let [key, val] of courseInfo) {
+        console.log();
+        console.log(key);
+        console.log(val.crsName);
+    }
 }
 
 function crawlArtsSciTimetables() {
@@ -88,23 +131,6 @@ function gatherEngineeringCourseTime($) {
     }
 }
 
-function gatherEngineeringCourseDescription($) {
-    // let courses = $('a[name]a:not([name^=Course])');
-    let courses = $("a[name$=H1],a[name$=Y1]");
-    let i = 0;
-    courses.each(function() {
-        let crsCode = $(this).attr('name');
-        let crsName = $(this).next().find('span').eq(1).text();
-        courseInfo.set(crsCode, crsName);
-    });
-
-    for (let [key, val] of courseInfo) {
-        console.log();
-        console.log(key);
-        console.log(val);
-    }
-}
-
 function dbInsert(section, prevCrsCode) {
     let crsCode = section.eq(0).text().slice(0, -1);
     let secCode = section.eq(1).text();
@@ -114,30 +140,57 @@ function dbInsert(section, prevCrsCode) {
     let location = section.eq(6).text().trim();
     let instructor = section.eq(7).text().trim();
 
-    if (prevCrsCode === crsCode) {
-        console.log(secCode);
-        console.log(dayOfWeek);
-        console.log(start);
-        console.log(finish);
-        if (location !== '') {
-            console.log(location);
-        }
-        if (instructor !== '') {
-            console.log(instructor);
-        }
-    } else {
-        console.log();
-        console.log(crsCode);
-        console.log(secCode);
-        console.log(dayOfWeek);
-        console.log(start);
-        console.log(finish);
-        if (location !== '') {
-            console.log(location);
-        }
-        if (instructor !== '') {
-            console.log(instructor);
-        }
+    // if (!courseInfo.has(crsCode)) {
+    //     console.log('undfined course code ' + crsCode);
+    //     return crsCode;
+    // }
+    let offering = courseInfo.get(crsCode);
+    if (offering === undefined) {
+        console.log('undfined course code ' + crsCode);
+        return crsCode;
     }
+    let session = new Sesssion(dayOfWeek, start, finish, location || 'TBA');
+    if (secCode.startsWith('LEC')) {
+        let lecSection = new LecSection(secCode, instructor || 'TBA');
+        lecSection.sessions.push(session);
+        offering.lectures.push(lecSection);
+    } else if (secCode.startsWith('TUT')) {
+        let section = new Section(secCode);
+        section.sessions.push(section);
+        offering.tutorials.push(section);
+    } else if (secCode.startsWith('PRA')) {
+        let section = new Section(secCode);
+        section.sessions.push(section);
+        offering.practicals.push(section);
+    } else {
+        console.log('this should not happen');
+        console.log(crsCode + " " + secCode);
+    }
+
+    // if (prevCrsCode === crsCode) {
+    //     console.log(secCode);
+    //     console.log(dayOfWeek);
+    //     console.log(start);
+    //     console.log(finish);
+    //     if (location !== '') {
+    //         console.log(location);
+    //     }
+    //     if (instructor !== '') {
+    //         console.log(instructor);
+    //     }
+    // } else {
+    //     console.log();
+    //     console.log(crsCode);
+    //     console.log(secCode);
+    //     console.log(dayOfWeek);
+    //     console.log(start);
+    //     console.log(finish);
+    //     if (location !== '') {
+    //         console.log(location);
+    //     }
+    //     if (instructor !== '') {
+    //         console.log(instructor);
+    //     }
+    // }
     return crsCode;
 }
