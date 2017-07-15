@@ -16,7 +16,7 @@ var session = require('./models/session');
 var courseInfo = new Map();
 
 function CourseOffering(crsName) {
-    this.crsName = crsName;
+    this.crsName = crsName || 'Unknown';
     this.lectures = [];
     this.tutorials = [];
     this.practicals = [];
@@ -29,7 +29,7 @@ function Section(secCode) {
 
 function LecSection(secCode, instructor) {
     Section.call(this, secCode);
-    this.instructor = instructor;
+    this.instructor = instructor || 'TBA';
     //just for storing data, no need to inherit prototype chain
 }
 
@@ -37,18 +37,19 @@ function Sesssion(dayOfWeek, startTime, endTime, location) {
     this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
     this.endTime = endTime;
-    this.location = location;
+    this.location = location || 'TBA';
 }
 
 crawl();
 
 function crawl() {
-    crawlEngineeringCourseDescription();
-    crawlEngineeringTimetables();
+    crawlEngineering();
+    // crawlEngineeringTimetables();
     // crawlArtsSciTimetables();
 }
 
-function crawlEngineeringCourseDescription() {
+
+function crawlEngineering() {
     let page = "https://portal.engineering.utoronto.ca/sites/calendars/current/Course_Descriptions.html";
     request(page, function (error, res, body) {
         if (error) {
@@ -78,11 +79,7 @@ function gatherEngineeringCourseDescription($) {
         courseInfo.set(crsCode, offering);
     });
 
-    for (let [key, val] of courseInfo) {
-        console.log();
-        console.log(key);
-        console.log(val.crsName);
-    }
+    crawlEngineeringTimetables();
 }
 
 function crawlArtsSciTimetables() {
@@ -129,6 +126,12 @@ function gatherEngineeringCourseTime($) {
         });
 
     }
+
+    for (let [crsCode, offering] of courseInfo) {
+        console.log();
+        console.log(crsCode);
+        console.log(offering);
+    }
 }
 
 function dbInsert(section, prevCrsCode) {
@@ -140,18 +143,15 @@ function dbInsert(section, prevCrsCode) {
     let location = section.eq(6).text().trim();
     let instructor = section.eq(7).text().trim();
 
-    // if (!courseInfo.has(crsCode)) {
-    //     console.log('undfined course code ' + crsCode);
-    //     return crsCode;
-    // }
     let offering = courseInfo.get(crsCode);
+    let session = new Sesssion(dayOfWeek, start, finish, location);
     if (offering === undefined) {
         console.log('undfined course code ' + crsCode);
-        return crsCode;
+        offering = new CourseOffering('');
+        courseInfo.set(crsCode, offering);
     }
-    let session = new Sesssion(dayOfWeek, start, finish, location || 'TBA');
     if (secCode.startsWith('LEC')) {
-        let lecSection = new LecSection(secCode, instructor || 'TBA');
+        let lecSection = new LecSection(secCode, instructor);
         lecSection.sessions.push(session);
         offering.lectures.push(lecSection);
     } else if (secCode.startsWith('TUT')) {
