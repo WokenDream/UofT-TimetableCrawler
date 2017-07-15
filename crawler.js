@@ -13,10 +13,13 @@ var lecSection = require('./models/lecture');
 var section = require('./models/section').SectionSchema;
 var session = require('./models/session');
 
-var courseInfo = new Map();
+var courseNames = new Map();
+var timeTable = null; //this will points to either fall or winter course info
+var timeTableFall = new Map();
+var timeTableWinter = new Map();
 
 function CourseOffering(crsName) {
-    this.crsName = crsName || 'Unknown';
+    this.crsName = crsName || 'Unofficial Course of the Program';
     this.lectures = [];
     this.tutorials = [];
     this.practicals = [];
@@ -75,8 +78,7 @@ function gatherEngineeringCourseDescription($) {
     courses.each(function () {
         let crsCode = $(this).attr('name');
         let crsName = $(this).next().find('span').eq(1).text();
-        let offering = new CourseOffering(crsName);
-        courseInfo.set(crsCode, offering);
+        courseNames.set(crsCode, crsName);
     });
 
     crawlEngineeringTimetables();
@@ -107,7 +109,20 @@ function crawlEngineeringTimetables() {
             }
             let $ = cheerio.load(body);
             console.log('crawling ' + page);
+            if (page.indexOf('winter') > 0) {
+                timeTable = timeTableWinter;
+            } else if (page.indexOf('fall') > 0) {
+                timeTable = timeTableFall;
+            } else {
+                console.log('This should not print');
+            }
             gatherEngineeringCourseTime($);
+
+            // if (page.indexOf('fall') > 0) {
+            //     for (let [crsCode, offering] of timeTableFall) {
+            //         console.log(crsCode);
+            //     }
+            // }
         });
     }
 }
@@ -126,12 +141,6 @@ function gatherEngineeringCourseTime($) {
         });
 
     }
-
-    for (let [crsCode, offering] of courseInfo) {
-        console.log();
-        console.log(crsCode);
-        console.log(offering);
-    }
 }
 
 function dbInsert(section, prevCrsCode) {
@@ -143,13 +152,22 @@ function dbInsert(section, prevCrsCode) {
     let location = section.eq(6).text().trim();
     let instructor = section.eq(7).text().trim();
 
-    let offering = courseInfo.get(crsCode);
+    let crsName = courseNames.get(crsCode);
     let session = new Sesssion(dayOfWeek, start, finish, location);
-    if (offering === undefined) {
-        console.log('undfined course code ' + crsCode);
-        offering = new CourseOffering('');
-        courseInfo.set(crsCode, offering);
+
+    if (crsName === undefined) {
+        //first time encounter an unofficial course
+        console.log('unofficial course ' + crsCode);
+        courseNames.set(crsCode, '');
     }
+    let offering = timeTable.get(crsCode);
+    if (offering === undefined){
+        //first time encounter this offering
+        offering = new CourseOffering(crsName);
+        timeTable.set(crsCode, offering);
+    }
+
+
     if (secCode.startsWith('LEC')) {
         let lecSection = new LecSection(secCode, instructor);
         lecSection.sessions.push(session);
@@ -167,30 +185,5 @@ function dbInsert(section, prevCrsCode) {
         console.log(crsCode + " " + secCode);
     }
 
-    // if (prevCrsCode === crsCode) {
-    //     console.log(secCode);
-    //     console.log(dayOfWeek);
-    //     console.log(start);
-    //     console.log(finish);
-    //     if (location !== '') {
-    //         console.log(location);
-    //     }
-    //     if (instructor !== '') {
-    //         console.log(instructor);
-    //     }
-    // } else {
-    //     console.log();
-    //     console.log(crsCode);
-    //     console.log(secCode);
-    //     console.log(dayOfWeek);
-    //     console.log(start);
-    //     console.log(finish);
-    //     if (location !== '') {
-    //         console.log(location);
-    //     }
-    //     if (instructor !== '') {
-    //         console.log(instructor);
-    //     }
-    // }
     return crsCode;
 }
