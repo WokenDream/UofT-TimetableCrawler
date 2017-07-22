@@ -20,7 +20,12 @@ crawl();
 function crawl() {
     let engResults = crawlEngineeringTimetables();
     engResults.then(function(timetables) {
-        console.log(timetables.winter);
+        console.log(timetables.fall);
+        for (let [crsCode, crsOffering] of timetables.fall) {
+            console.log();
+            console.log(crsCode);
+            crsOffering.printSelf();
+        }
     });
 }
 

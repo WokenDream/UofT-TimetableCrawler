@@ -3,10 +3,13 @@ var cheerio = require('cheerio');
 
 var courseOffering = require('./classes/courseOffering');
 var CourseOffering = courseOffering.CourseOffering;
-var LecSection = courseOffering.LecSection;
-var Section = courseOffering.Section;
+// var LecSection = courseOffering.LecSection;
+// var Section = courseOffering.Section;
 var Session = courseOffering.Session;
-
+var LecSession = courseOffering.LecSession;
+/**
+ * returns a promise containing two maps [key: course code, value: course name]
+ */
 function crawl() {
     let crawler = new Promise(crawlerInit);
     let timetables = crawlEngineeringTimetables(crawler);
@@ -20,6 +23,7 @@ function crawl() {
 
 /**
  * Initialize cralwer by pairing course codes with names
+ * returns a map [key: course code, value: course name]
  * @param {*} resolve 
  * @param {*} reject 
  */
@@ -140,7 +144,6 @@ function updateTimetable(timetable, section, prevCrsCode, courseNames) {
 
     let crsName = courseNames.get(crsCode);
     let session = new Session(dayOfWeek, start, finish, location);
-
     if (crsName === undefined) {
         //first time encounter an unofficial course
         console.log('unofficial course ' + crsCode);
@@ -154,21 +157,31 @@ function updateTimetable(timetable, section, prevCrsCode, courseNames) {
     }
 
     if (secCode.startsWith('LEC')) {
-        let lecSection = new LecSection(secCode, instructor);
-        lecSection.sessions.push(session);
-        offering.lectures.push(lecSection);
+        let lec = new LecSession(instructor, secCode, dayOfWeek, start, finish, location);
+        offering.lectures.push(lec);
     } else if (secCode.startsWith('TUT')) {
-        let section = new Section(secCode);
-        section.sessions.push(section);
-        offering.tutorials.push(section);
-    } else if (secCode.startsWith('PRA')) {
-        let section = new Section(secCode);
-        section.sessions.push(section);
-        offering.practicals.push(section);
+        let tut = new Session(secCode, dayOfWeek, start, finish, location);
+        offering.tutorials.push(tut);
     } else {
-        console.log('this should not happen');
-        console.log(crsCode + " " + secCode);
+        let pra = new Session(secCode, dayOfWeek, start, finish, location);
+        offering.practicals.push(pra);
     }
+    // if (secCode.startsWith('LEC')) {
+    //     let lecSection = new LecSection(secCode, instructor);
+    //     lecSection.sessions.push(session);
+    //     offering.lectures.push(lecSection);
+    // } else if (secCode.startsWith('TUT')) {
+    //     let section = new Section(secCode);
+    //     section.sessions.push(session);
+    //     offering.tutorials.push(section);
+    // } else if (secCode.startsWith('PRA')) {
+    //     let section = new Section(secCode);
+    //     section.sessions.push(session);
+    //     offering.practicals.push(section);
+    // } else {
+    //     console.log('this should not happen');
+    //     console.log(crsCode + " " + secCode);
+    // }
 
     return crsCode;
 }
