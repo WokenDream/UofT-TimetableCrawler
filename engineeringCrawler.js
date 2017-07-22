@@ -3,10 +3,9 @@ var cheerio = require('cheerio');
 
 var courseOffering = require('./classes/courseOffering');
 var CourseOffering = courseOffering.CourseOffering;
-// var LecSection = courseOffering.LecSection;
-// var Section = courseOffering.Section;
 var Session = courseOffering.Session;
 var LecSession = courseOffering.LecSession;
+
 /**
  * returns a promise containing two maps [key: course code, value: course name]
  */
@@ -117,10 +116,9 @@ function gatherEngineeringCourseTime($, courseNames) {
     let timetable = new Map();
     for (let disipline of disiplines) {
         let offerings = $('a[name=' + disipline + ']');
-        let prevCrsCode = '';
         $('tr', offerings).slice(1).each(function () {
             let section = $('td', this);
-            prevCrsCode = updateTimetable(timetable, section, prevCrsCode, courseNames);
+            updateTimetable(timetable, section, courseNames);
         });
     }
     return timetable;
@@ -130,10 +128,9 @@ function gatherEngineeringCourseTime($, courseNames) {
  * insert a section into timetable
  * @param {*} timetable the timetable to be updated
  * @param {*} section a section to be read
- * @param {*} prevCrsCode the course code of the previous section that was read
  * @param {*} courseNames a map [key: course code, value: course name]
  */
-function updateTimetable(timetable, section, prevCrsCode, courseNames) {
+function updateTimetable(timetable, section, courseNames) {
     let crsCode = section.eq(0).text().slice(0, -1);
     let secCode = section.eq(1).text();
     let dayOfWeek = section.eq(3).text();
@@ -157,33 +154,30 @@ function updateTimetable(timetable, section, prevCrsCode, courseNames) {
     }
 
     if (secCode.startsWith('LEC')) {
-        let lec = new LecSession(instructor, secCode, dayOfWeek, start, finish, location);
-        offering.lectures.push(lec);
+        let lecSessions = offering.lectures.get(secCode);
+        if (lecSessions === undefined) {
+            lecSessions = [session];
+            offering.lectures.set(secCode, lecSessions);
+        } else {
+            lecSessions.push(session);
+        }
     } else if (secCode.startsWith('TUT')) {
-        let tut = new Session(secCode, dayOfWeek, start, finish, location);
-        offering.tutorials.push(tut);
+        let tutSessions = offering.tutorials.get(secCode);
+        if (tutSessions === undefined) {
+            tutSessions = [session];
+            offering.tutorials.set(secCode, tutSessions);
+        } else {
+            tutSessions.push(session);
+        }
     } else {
-        let pra = new Session(secCode, dayOfWeek, start, finish, location);
-        offering.practicals.push(pra);
+        let praSessions = offering.practicals.get(secCode);
+        if (praSessions === undefined) {
+            praSessions = [session];
+            offering.practicals.set(secCode, praSessions);
+        } else {
+            praSessions.push(session);
+        }
     }
-    // if (secCode.startsWith('LEC')) {
-    //     let lecSection = new LecSection(secCode, instructor);
-    //     lecSection.sessions.push(session);
-    //     offering.lectures.push(lecSection);
-    // } else if (secCode.startsWith('TUT')) {
-    //     let section = new Section(secCode);
-    //     section.sessions.push(session);
-    //     offering.tutorials.push(section);
-    // } else if (secCode.startsWith('PRA')) {
-    //     let section = new Section(secCode);
-    //     section.sessions.push(session);
-    //     offering.practicals.push(section);
-    // } else {
-    //     console.log('this should not happen');
-    //     console.log(crsCode + " " + secCode);
-    // }
-
-    return crsCode;
 }
 
 module.exports = crawl;

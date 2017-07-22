@@ -1,49 +1,44 @@
 function CourseOffering(crsName) {
     this.crsName = crsName || 'Unofficial Course of the Program';
-    this.lectures = [];
-    this.tutorials = [];
-    this.practicals = [];
+    this.lectures = new Map(); // [key: secCode, value: array of lec sessions]
+    this.tutorials = new Map(); // [key: secCode, value: array of sessions]
+    this.practicals = new Map(); // [key: secCode, value: array of sessions]
 }
 CourseOffering.prototype.printSelf = function() {
     console.log(this.crsName);
-    for (let lec of this.lectures) {
-        console.log(lec.instructor);
-        console.log(lec.secCode);
-        console.log(lec.dayOfWeek);
-        console.log(lec.startTime);
-        console.log(lec.endTime);
-        console.log(lec.location);
+    for (let [lecCode, lecSessions] of this.lectures) {
+        console.log(lecCode);
+        for (let session of lecSessions) {
+            session.printSelf();
+        }
     }
 }
 
-// function Section(secCode) {
-//     this.secCode = secCode;
-//     this.sessions = [];
-// }
-
-// function LecSection(secCode, instructor) {
-//     Section.call(this, secCode);
-//     this.instructor = instructor || 'TBA';
-//     //just for storing data, no need to inherit prototype chain
-// }
-
-function Session(secCode, dayOfWeek, startTime, endTime, location) {
-    this.secCode = secCode;
+function Session(dayOfWeek, startTime, endTime, location) {
     this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
     this.endTime = endTime;
     this.location = location || 'TBA';
 }
+Session.prototype.printSelf = function() {
+    console.log(this.dayOfWeek);
+    console.log(this.startTime);
+    console.log(this.endTime);
+    console.log(this.location);
+}
 
-function LecSession(instructor, secCode, dayOfWeek, startTime, endTime, location) {
-    Session.call(this, secCode, dayOfWeek, startTime, endTime, location);
+function LecSession(instructor, dayOfWeek, startTime, endTime, location) {
+    Session.call(this, dayOfWeek, startTime, endTime, location);
     this.instructor = instructor || 'TBA';
 }
+LecSession.prototype.printSelf = function() {
+    console.log(this.instructor);
+    Session.prototype.printSelf();
+}
+
 
 module.exports = {
     CourseOffering: CourseOffering,
-    // Section: Section,
-    // LecSection: LecSection,
     Session: Session,
     LecSession: LecSession
 }
