@@ -152,8 +152,9 @@ function updateTimetable(timetable, section, courseNames) {
         offering = new CourseOffering(crsName);
         timetable.set(crsCode, offering);
     }
-
-    if (secCode.startsWith('LEC')) {
+    
+    let category = secCode.slice(0, 3);
+    if (category === 'LEC') {
         let lecSessions = offering.lectures.get(secCode);
         if (lecSessions === undefined) {
             lecSessions = [session];
@@ -161,7 +162,7 @@ function updateTimetable(timetable, section, courseNames) {
         } else {
             lecSessions.push(session);
         }
-    } else if (secCode.startsWith('TUT')) {
+    } else if (category === 'TUT') {
         let tutSessions = offering.tutorials.get(secCode);
         if (tutSessions === undefined) {
             tutSessions = [session];

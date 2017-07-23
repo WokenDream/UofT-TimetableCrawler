@@ -14,6 +14,27 @@ CourseOffering.prototype.printSelf = function() {
     }
 }
 
+/**
+ * covert CourseOffering to JSON compatible objects
+ */
+CourseOffering.prototype.toObject = function() {
+    let offering = new Object();
+    offering.crsName = this.crsName;
+    offering.lectures = new Object();
+    offering.tutorials = new Object();
+    offering.practicals = new Object();
+    for (let [secCode, sessions] of this.lectures) {
+        offering.lectures[secCode] = sessions;
+    }
+    for (let [secCode, sessions] of this.tutorials) {
+        offering.tutorials[secCode] = sessions;
+    }
+    for (let [secCode, sessions] of this.practicals) {
+        offering.practicals[secCode] = sessions;
+    }
+    return offering;
+}
+
 function Session(dayOfWeek, startTime, endTime, location) {
     this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
