@@ -32,12 +32,16 @@ function crawl() {
     //     //     crsOffering.printSelf();
     //     // }
     // });
-    return new Promise(function(resolve, reject) {
-        engResults.then(function(timetables) {
-
-            resolve(timetablesToJSON(timetables));
-        });
+    return engResults.then(function(timetables) {
+        console.log('engineering crawler finished');
+        return timetablesToJSON(timetables);
     });
+    // return new Promise(function(resolve, reject) {
+    //     engResults.then(function(timetables) {
+
+    //         resolve(timetablesToJSON(timetables));
+    //     });
+    // });
 }
 
 /**
