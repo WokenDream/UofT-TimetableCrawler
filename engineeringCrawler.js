@@ -140,7 +140,6 @@ function updateTimetable(timetable, section, courseNames) {
     let instructor = section.eq(7).text().trim();
 
     let crsName = courseNames.get(crsCode);
-    let session = new Session(dayOfWeek, start, finish, location);
     if (crsName === undefined) {
         //first time encounter an unofficial course
         console.log('unofficial course ' + crsCode);
@@ -155,14 +154,16 @@ function updateTimetable(timetable, section, courseNames) {
     
     let category = secCode.slice(0, 3);
     if (category === 'LEC') {
+        let lecSession = new LecSession(instructor, dayOfWeek, start, finish, location);
         let lecSessions = offering.lectures.get(secCode);
         if (lecSessions === undefined) {
-            lecSessions = [session];
+            lecSessions = [lecSession];
             offering.lectures.set(secCode, lecSessions);
         } else {
-            lecSessions.push(session);
+            lecSessions.push(lecSession);
         }
     } else if (category === 'TUT') {
+        let session = new Session(dayOfWeek, start, finish, location);
         let tutSessions = offering.tutorials.get(secCode);
         if (tutSessions === undefined) {
             tutSessions = [session];
@@ -171,6 +172,7 @@ function updateTimetable(timetable, section, courseNames) {
             tutSessions.push(session);
         }
     } else {
+        let session = new Session(dayOfWeek, start, finish, location);
         let praSessions = offering.practicals.get(secCode);
         if (praSessions === undefined) {
             praSessions = [session];
