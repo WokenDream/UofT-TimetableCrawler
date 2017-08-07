@@ -4,7 +4,6 @@ var cheerio = require('cheerio');
 var courseOffering = require('./classes/courseOffering');
 var CourseOffering = courseOffering.CourseOffering;
 var Session = courseOffering.Session;
-var LecSession = courseOffering.LecSession;
 
 /**
  * returns a promise containing two maps [key: course code, value: course name]
@@ -95,8 +94,13 @@ function crawlSinglePage(page, courseNames) {
             }
             let $ = cheerio.load(body);
             console.log('crawling ' + page);
-            let timetable = gatherEngineeringCourseTime($, courseNames);
-            resolve(timetable);
+            try {
+                let timetable = gatherEngineeringCourseTime($, courseNames);
+                resolve(timetable);
+            } catch (e) {
+                reject(e);
+            }
+            
         });
     });
 }
@@ -153,33 +157,29 @@ function updateTimetable(timetable, section, courseNames) {
     }
     
     let category = secCode.slice(0, 3);
-    if (category === 'LEC') {
-        let lecSession = new LecSession(instructor, dayOfWeek, start, finish, location);
-        let lecSessions = offering.lectures.get(secCode);
-        if (lecSessions === undefined) {
-            lecSessions = [lecSession];
-            offering.lectures.set(secCode, lecSessions);
-        } else {
-            lecSessions.push(lecSession);
-        }
-    } else if (category === 'TUT') {
-        let session = new Session(dayOfWeek, start, finish, location);
-        let tutSessions = offering.tutorials.get(secCode);
-        if (tutSessions === undefined) {
-            tutSessions = [session];
-            offering.tutorials.set(secCode, tutSessions);
-        } else {
-            tutSessions.push(session);
-        }
+    let session = new Session(dayOfWeek, start, finish, location, instructor);
+    switch (category) {
+        case "LEC":
+            addSessionToOffering(session, secCode, offering.lectures);
+            break;
+        case "TUT":
+            addSessionToOffering(session, secCode, offering.tutorials);
+            break;
+        case "PRA":
+            addSessionToOffering(session, secCode, offering.practicals);
+            break;
+        default:
+            throw "Unknown category: " + category;
+    }
+}
+
+function addSessionToOffering(session, secCode, lecOrTutOrPra) {
+    let sessions = lecOrTutOrPra.get(secCode);
+    if (sessions === undefined) {
+        sessions = [session];
+        lecOrTutOrPra.set(secCode, sessions);
     } else {
-        let session = new Session(dayOfWeek, start, finish, location);
-        let praSessions = offering.practicals.get(secCode);
-        if (praSessions === undefined) {
-            praSessions = [session];
-            offering.practicals.set(secCode, praSessions);
-        } else {
-            praSessions.push(session);
-        }
+        sessions.push(session);
     }
 }
 

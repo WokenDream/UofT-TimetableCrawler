@@ -18,7 +18,8 @@ var crawlEngineeringTimetables = require('./engineeringCrawler');
 // crawl();
 
 /**
- * crawl engineering and artsci timetables and return the result as a JSON object
+ * crawl engineering and artsci timetables and return the result as a JSON object in a Promise
+ * user is expected to handle rejection
  */
 function crawl() {
     console.log('crawler initiated...');
@@ -36,12 +37,6 @@ function crawl() {
         console.log('engineering crawler finished');
         return timetablesToJSON(timetables);
     });
-    // return new Promise(function(resolve, reject) {
-    //     engResults.then(function(timetables) {
-
-    //         resolve(timetablesToJSON(timetables));
-    //     });
-    // });
 }
 
 /**

@@ -1,5 +1,5 @@
 function CourseOffering(crsName) {
-    this.crsName = crsName || 'Unofficial Course of the Program';
+    this.crsName = crsName || 'Unofficial Course';
     this.lectures = new Map(); // [key: secCode, value: array of lec sessions]
     this.tutorials = new Map(); // [key: secCode, value: array of sessions]
     this.practicals = new Map(); // [key: secCode, value: array of sessions]
@@ -35,31 +35,22 @@ CourseOffering.prototype.toObject = function() {
     return offering;
 }
 
-function Session(dayOfWeek, startTime, endTime, location) {
+function Session(dayOfWeek, startTime, endTime, location, instructor) {
     this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
     this.endTime = endTime;
     this.location = location || 'TBA';
+    this.instructor = instructor || 'TBA'
 }
 Session.prototype.printSelf = function() {
     console.log(this.dayOfWeek);
     console.log(this.startTime);
     console.log(this.endTime);
     console.log(this.location);
-}
-
-function LecSession(instructor, dayOfWeek, startTime, endTime, location) {
-    Session.call(this, dayOfWeek, startTime, endTime, location);
-    this.instructor = instructor || 'TBA';
-}
-LecSession.prototype.printSelf = function() {
     console.log(this.instructor);
-    Session.prototype.printSelf();
 }
-
 
 module.exports = {
     CourseOffering: CourseOffering,
-    Session: Session,
-    LecSession: LecSession
+    Session: Session
 }
