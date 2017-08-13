@@ -141,7 +141,7 @@ function updateTimetable(timetable, section, courseNames) {
     let start = section.eq(4).text();
     let finish = section.eq(5).text();
     let location = section.eq(6).text().trim();
-    let instructor = section.eq(7).text().trim();
+    let instructors = section.eq(7).text().trim();
 
     let crsName = courseNames.get(crsCode);
     if (crsName === undefined) {
@@ -157,7 +157,7 @@ function updateTimetable(timetable, section, courseNames) {
     }
     
     let category = secCode.slice(0, 3);
-    let session = new Session(dayOfWeek, start, finish, location, instructor);
+    let session = new Session(dayOfWeek, start, finish, location, instructors);
     switch (category) {
         case "LEC":
             addSessionToOffering(session, secCode, offering.lectures);

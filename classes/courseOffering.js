@@ -35,19 +35,19 @@ CourseOffering.prototype.toObject = function() {
     return offering;
 }
 
-function Session(dayOfWeek, startTime, endTime, location, instructor) {
+function Session(dayOfWeek, startTime, endTime, location, instructors) {
     this.dayOfWeek = dayOfWeek;
     this.startTime = startTime;
     this.endTime = endTime;
     this.location = location || 'TBA';
-    this.instructor = instructor || 'TBA'
+    this.instructors = instructors || 'TBA'
 }
 Session.prototype.printSelf = function() {
     console.log(this.dayOfWeek);
     console.log(this.startTime);
     console.log(this.endTime);
     console.log(this.location);
-    console.log(this.instructor);
+    console.log(this.instructors);
 }
 
 module.exports = {
