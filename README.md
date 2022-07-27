@@ -1,2 +1,2 @@
 # UofT-TimeTableCrawler
-This is a nodejs web crawle that scrapes the lecture time info from U of T websites of engineering and artsci faulcties.
+This is a Node.js web crawler that scrapes the lecture schedules from the websites of the Engineering faculty and ArtSci faculties of the University of Toronto.
